@@ -24,7 +24,7 @@ For a YAML manifest, convert it to JSON with your existing deployment tooling be
 | --- | --- |
 | REPLICAS | At least two explicit replicas under this example availability policy |
 | SELECTOR | Nonempty matchLabels matching the pod template |
-| IMAGE_PIN | Explicit image tag or digest; rejects omitted tags and latest |
+| IMAGE_PIN | Nonempty image tag or 64-character hexadecimal SHA-256 digest; rejects omitted tags and latest |
 | RESOURCES | CPU and memory requests and limits are present |
 | PROBE | Readiness and liveness probe handlers are present |
 | NON_ROOT | runAsNonRoot is true |
@@ -53,7 +53,7 @@ A nonzero exit blocks a shell-based CI step. [VALIDATION.md](VALIDATION.md) reco
 
 ## Scope and tradeoffs
 
-This is a focused policy checker, not a Kubernetes schema validator, admission controller, vulnerability scanner, or security certification. It supports one Deployment object, not Lists, Helm charts, multi-document YAML, or other workloads. It handles matchLabels, not matchExpressions. It checks resource presence rather than parsing quantities or comparing requests with limits. It does not validate digest syntax or prove that image tags are immutable. Probe handlers are checked for presence, not operational correctness.
+This is a focused policy checker, not a Kubernetes schema validator, admission controller, vulnerability scanner, or security certification. It supports one Deployment object, not Lists, Helm charts, multi-document YAML, or other workloads. It handles matchLabels, not matchExpressions. It checks resource presence rather than parsing quantities or comparing requests with limits. It validates SHA-256 digest shape but does not verify image existence, registry authenticity, or tag immutability. Probe handlers are checked for presence, not operational correctness.
 
 Policies are deliberately opinionated: a single replica may be appropriate for a development environment, and a read-only filesystem can require writable volumes. Adapt the policy to the workload rather than silencing findings without understanding them.
 
