@@ -23,6 +23,18 @@ class PolicyTests(unittest.TestCase):
     def test_empty_containers(self):
         self.good['spec']['template']['spec']['containers']=[]
         self.assertIn('CONTAINERS',self.codes(self.good))
+    def test_empty_digest_is_rejected(self):
+        self.good['spec']['template']['spec']['containers'][0]['image']='example/app@sha256:'
+        self.assertIn('IMAGE_PIN', self.codes(self.good))
+    def test_nonhex_digest_is_rejected(self):
+        self.good['spec']['template']['spec']['containers'][0]['image']='example/app@sha256:'+'z'*64
+        self.assertIn('IMAGE_PIN', self.codes(self.good))
+    def test_valid_digest_passes(self):
+        self.good['spec']['template']['spec']['containers'][0]['image']='example/app@sha256:'+'a'*64
+        self.assertNotIn('IMAGE_PIN', self.codes(self.good))
+    def test_empty_tag_is_rejected(self):
+        self.good['spec']['template']['spec']['containers'][0]['image']='example/app:'
+        self.assertIn('IMAGE_PIN', self.codes(self.good))
     def test_wrong_kind(self):
         with self.assertRaises(ValueError): check({'kind':'Service'})
     def test_input_is_not_mutated(self):

@@ -1,6 +1,7 @@
 """Check Kubernetes Deployment JSON before a release. No cluster access required."""
 import argparse
 import json
+import re
 from pathlib import Path
 import sys
 
@@ -31,8 +32,12 @@ def check(document):
         path = f'spec.template.spec.containers[{position}]'
         image = container.get('image', '')
         tail = image.rsplit('/', 1)[-1]
-        if not image or (not '@sha256:' in image and (':' not in tail or tail.endswith(':latest'))):
-            report('IMAGE_PIN', path+'.image', 'Use an explicit version tag or image digest.')
+        if '@' in image:
+            pinned = re.fullmatch(r'[^@\s]+@sha256:[0-9a-fA-F]{64}', image) is not None
+        else:
+            pinned = bool(image) and ':' in tail and bool(tail.rsplit(':', 1)[-1]) and not tail.endswith(':latest')
+        if not pinned:
+            report('IMAGE_PIN', path+'.image', 'Use a nonempty version tag or a valid SHA-256 image digest.')
         for group in ('requests', 'limits'):
             values = container.get('resources', {}).get(group, {})
             if any(not values.get(key) for key in ('cpu', 'memory')):
